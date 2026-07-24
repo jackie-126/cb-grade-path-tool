@@ -119,7 +119,13 @@ def compute_scores_for_dataframe(df, col_mapping):
             row_data[field_key] = row.get(col_name, "")
 
         score_result = calculate_scores(row_data)
-        results.append(score_result)
+        flat = {}
+        for k, v in score_result.items():
+            if isinstance(v, dict) and "score" in v:
+                flat[k] = v["score"]
+            else:
+                flat[k] = v
+        results.append(flat)
 
     score_df = pd.DataFrame(results)
 
@@ -164,3 +170,40 @@ def get_detection_summary_questionnaire(df, mapping, extra_cols):
         summary.append(f"  未匹配列({len(extra_cols)}): {extra_cols[:5]}{'...' if len(extra_cols) > 5 else ''}")
 
     return "\n".join(summary)
+
+
+STAGE1_MARKER_KEYWORDS = ["外贸出口经验", "专精特新", "产业带代表", "创新产品", "广交会", "电商供货经验", "展厅展示", "小批量"]
+STAGE2_MARKER_KEYWORDS = ["方向意图", "客户画像", "SKU", "MOQ", "起订量", "主营产品所属大类"]
+
+
+def _count_keyword_hits(df, keywords):
+    hit_cols = 0
+    for col in df.columns:
+        norm = normalize(col)
+        for kw in keywords:
+            if normalize(kw) in norm:
+                hit_cols += 1
+                break
+    return hit_cols
+
+
+def is_stage1_dataframe(df):
+    hits = _count_keyword_hits(df, STAGE1_MARKER_KEYWORDS)
+    return hits >= 3
+
+
+def is_stage2_dataframe(df):
+    hits = _count_keyword_hits(df, STAGE2_MARKER_KEYWORDS)
+    return hits >= 3
+
+
+def classify_stage(df):
+    s1 = is_stage1_dataframe(df)
+    s2 = is_stage2_dataframe(df)
+    if s1 and not s2:
+        return "stage1"
+    if s2 and not s1:
+        return "stage2"
+    if s1 and s2:
+        return "both"
+    return "unknown"

@@ -115,6 +115,48 @@ def _gen_score_box(df, fname="score_box.png"):
     return _save_fig(fig, fname)
 
 
+def _gen_path_grade_stack(df, fname="path_grade_stack.png"):
+    path_col = "出海路径" if "出海路径" in df.columns else "路径"
+    if path_col not in df.columns or "等级" not in df.columns:
+        return None
+    ct = pd.crosstab(df[path_col], df["等级"])
+    ct = ct.reindex(columns=[g for g in GRADE_ORDER if g in ct.columns], fill_value=0)
+    if ct.empty:
+        return None
+    _setup_chinese_font()
+    fig, ax = plt.subplots(figsize=(10, max(4, len(ct) * 0.5)))
+    colors = ["#2ecc71", "#3498db", "#f39c12", "#e67e22", "#e74c3c", "#95a5a6"][:len(ct.columns)]
+    ct.plot(kind="barh", stacked=True, ax=ax, color=colors, edgecolor="white", linewidth=0.5)
+    ax.set_xlabel("企业数量")
+    ax.set_title("路径×等级分布", fontsize=14, fontweight="bold")
+    ax.legend(title="等级", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.tight_layout()
+    return _save_fig(fig, fname)
+
+
+def _gen_score_by_path(df, fname="score_by_path.png"):
+    path_col = "出海路径" if "出海路径" in df.columns else "路径"
+    score_cols = ["外贸基础能力", "电商运营能力", "合作配合意愿", "产能承接配套"]
+    available = [c for c in score_cols if c in df.columns]
+    if path_col not in df.columns or not available:
+        return None
+    grouped = df.groupby(path_col)[available].mean()
+    if grouped.empty:
+        return None
+    _setup_chinese_font()
+    fig, ax = plt.subplots(figsize=(10, max(4, len(grouped) * 0.5)))
+    grouped.plot(kind="barh", ax=ax, color=["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(available)], edgecolor="white", linewidth=0.5)
+    ax.set_xlabel("平均得分")
+    ax.set_title("各路径维度平均得分对比", fontsize=14, fontweight="bold")
+    ax.legend(title="维度", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.tight_layout()
+    return _save_fig(fig, fname)
+
+
 def _add_table(doc, headers, rows):
     table = doc.add_table(rows=len(rows)+1, cols=len(headers))
     table.style = "Light Grid Accent 1"
@@ -210,7 +252,48 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             doc.add_picture(path_img, width=Inches(5.5))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    h = doc.add_heading("四、各维度评分分析", level=1)
+    h = doc.add_heading("四、路径×等级交叉分析", level=1)
+    for run in h.runs:
+        _set_run_font(run, size=Pt(14), bold=True)
+    path_col = "出海路径" if "出海路径" in df.columns else "路径"
+    if path_col in df.columns and "等级" in df.columns:
+        ct = pd.crosstab(df[path_col], df["等级"])
+        ct = ct.reindex(columns=[g for g in GRADE_ORDER if g in ct.columns], fill_value=0)
+        if not ct.empty:
+            headers = ["路径"] + [g for g in GRADE_ORDER if g in ct.columns]
+            rows = []
+            for path_name, row in ct.iterrows():
+                rows.append([str(path_name)] + [str(int(v)) for v in row.values])
+            _add_table(doc, headers, rows)
+            doc.add_paragraph()
+
+            stack_img = _gen_path_grade_stack(df, f"{region_name}_path_grade.png")
+            if stack_img:
+                doc.add_picture(stack_img, width=Inches(5.5))
+                doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    h = doc.add_heading("五、各路径企业得分对比", level=1)
+    for run in h.runs:
+        _set_run_font(run, size=Pt(14), bold=True)
+    score_cols = ["外贸基础能力", "电商运营能力", "合作配合意愿", "产能承接配套"]
+    available_dims = [c for c in score_cols if c in df.columns]
+    if path_col in df.columns and available_dims:
+        grouped = df.groupby(path_col)[available_dims + ["总分"]].agg(["mean", "count"]) if "总分" in df.columns else df.groupby(path_col)[available_dims].agg(["mean", "count"])
+        avg_df = df.groupby(path_col)[available_dims].mean()
+        if not avg_df.empty:
+            headers = ["路径"] + available_dims
+            rows = []
+            for path_name, row in avg_df.iterrows():
+                rows.append([str(path_name)] + [f"{v:.1f}" for v in row.values])
+            _add_table(doc, headers, rows)
+            doc.add_paragraph()
+
+            score_by_path_img = _gen_score_by_path(df, f"{region_name}_score_by_path.png")
+            if score_by_path_img:
+                doc.add_picture(score_by_path_img, width=Inches(5.5))
+                doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    h = doc.add_heading("六、各维度评分分析", level=1)
     for run in h.runs:
         _set_run_font(run, size=Pt(14), bold=True)
     score_cols = {"外贸基础能力": 25, "电商运营能力": 23, "合作配合意愿": 35, "产能承接配套": 17}
@@ -231,7 +314,7 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             doc.add_picture(box_img, width=Inches(5.5))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    h = doc.add_heading("五、AB级企业明细", level=1)
+    h = doc.add_heading("七、AB级企业明细", level=1)
     for run in h.runs:
         _set_run_font(run, size=Pt(14), bold=True)
     if "等级" in df.columns:

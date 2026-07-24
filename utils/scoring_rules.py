@@ -175,12 +175,9 @@ def score_ecommerce_sales(value):
     from utils.normalize import normalize
     import re
     s = normalize(value).lower()
-    # Check for explicit "无/没有/0销售额" — require standalone 0 or 无
-    if re.search(r'(^|[^0-9])0([^0-9]|$)', s) or "无" in s or "没有" in s or "无任何" in s:
+    if re.search(r'(^|[^0-9])0([^0-9]|$)', s) or "无任何" in s or "无" in s or "没有" in s:
         return 0
-    if "不足10万" in s or "有销售额" in s:
-        return 3
-    if "仅跨境" in s or "仅国内" in s:
+    if "不足" in s or "有销售额" in s:
         return 3
     s_num = s.replace("美元", "").replace("$", "").replace("及以上", "").replace("以上", "").strip()
     s_num = s_num.replace("万", "0000")
@@ -192,8 +189,6 @@ def score_ecommerce_sales(value):
             return 3
     except (ValueError, TypeError):
         pass
-    if "跨境电商" in s and "国内" in s:
-        return 10
     return 0
 
 
@@ -219,7 +214,10 @@ def calculate_scores(row_data):
             raw_value = row_data.get(field, "")
             field_type = FIELD_MAPPING[field]["type"]
             score_func = SCORE_FUNCTIONS.get(field_type, lambda v: 0)
-            score = min(score_func(raw_value), item["max"])
+            if field_type == "bool":
+                score = score_func(raw_value) * item["max"]
+            else:
+                score = min(score_func(raw_value), item["max"])
             results[field] = {"raw": raw_value, "score": score, "max": item["max"], "name": item["name"]}
             dim_score += score
         results[dim_name] = {"score": dim_score, "max": dim_info["max_score"]}

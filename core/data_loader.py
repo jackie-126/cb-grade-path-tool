@@ -4,13 +4,22 @@ from core.column_detector import detect_columns, validate_mapping, get_detection
 
 
 def load_excel(uploaded_file):
+    name = uploaded_file.name.lower()
     try:
-        df = pd.read_excel(uploaded_file, engine="openpyxl")
-        return df
+        if name.endswith(".csv"):
+            uploaded_file.seek(0)
+            df = pd.read_csv(uploaded_file)
+            return df
+        else:
+            df = pd.read_excel(uploaded_file, engine="openpyxl")
+            return df
     except Exception:
         try:
             uploaded_file.seek(0)
-            df = pd.read_excel(uploaded_file, engine="xlrd")
+            if name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file, encoding="gbk")
+            else:
+                df = pd.read_excel(uploaded_file, engine="xlrd")
             return df
         except Exception as e:
             st.error(f"无法读取文件: {e}")
