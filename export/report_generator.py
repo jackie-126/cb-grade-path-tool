@@ -48,6 +48,10 @@ def _setup_chinese_font():
     font_paths = [
         "C:/Windows/Fonts/msyh.ttc", "C:/Windows/Fonts/simhei.ttf",
         "C:/Windows/Fonts/simsun.ttc", "C:/Windows/Fonts/msyhbd.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
     ]
     for fp in font_paths:
         if os.path.exists(fp):
@@ -56,7 +60,16 @@ def _setup_chinese_font():
             plt.rcParams["font.family"] = prop.get_name()
             plt.rcParams["axes.unicode_minus"] = False
             return
-    plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei"]
+    for family in ["Noto Sans CJK SC", "Noto Sans CJK", "WenQuanYi Micro Hei", "AR PL UMing CN", "SimHei", "Microsoft YaHei"]:
+        try:
+            prop = fm.FontProperties(family=family)
+            if fm.findfont(prop, fallback_to_default=False) != fm.findfont(""):
+                plt.rcParams["font.family"] = family
+                plt.rcParams["axes.unicode_minus"] = False
+                return
+        except Exception:
+            continue
+    plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "SimHei", "Microsoft YaHei"]
     plt.rcParams["axes.unicode_minus"] = False
 
 
