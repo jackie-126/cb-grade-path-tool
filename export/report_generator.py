@@ -101,15 +101,19 @@ def _gen_score_box(df, fname="score_box.png"):
     available = [c for c in score_cols if c in df.columns]
     if not available:
         return None
-    data = [(c, df[c].dropna().values) for c in available]
-    data = [(c, d) for c, d in data if len(d) > 0]
-    if not data:
-        return None
-    labels, values = zip(*data)
     _setup_chinese_font()
+    valid_labels = []
+    valid_data = []
+    for c in available:
+        vals = pd.to_numeric(df[c], errors="coerce").dropna().astype(float).tolist()
+        if len(vals) >= 2:
+            valid_labels.append(c)
+            valid_data.append(vals)
+    if not valid_data:
+        return None
     fig, ax = plt.subplots(figsize=(8, 4))
-    bp = ax.boxplot(values, labels=labels, patch_artist=True)
-    for patch, color in zip(bp["boxes"], ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(labels)]):
+    bp = ax.boxplot(valid_data, labels=valid_labels, patch_artist=True)
+    for patch, color in zip(bp["boxes"], ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(valid_labels)]):
         patch.set_facecolor(color)
         patch.set_alpha(0.6)
     ax.set_ylabel("得分")
@@ -146,7 +150,7 @@ def _gen_score_by_path(df, fname="score_by_path.png"):
     available = [c for c in score_cols if c in df.columns]
     if path_col not in df.columns or not available:
         return None
-    grouped = df.groupby(path_col)[available].mean().dropna(how="all")
+    grouped = df.groupby(path_col)[available].mean(numeric_only=True).dropna(how="all")
     if grouped.empty:
         return None
     grouped = grouped.dropna(axis=1, how="all")
@@ -223,7 +227,11 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
         p = doc.add_paragraph(f"企业平均总分为 {df['总分'].mean():.1f} 分。")
         _set_paragraph_font(p)
 
-    grade_img = _gen_grade_pie(df, f"{region_name}_grade.png")
+    grade_img = None
+    try:
+        grade_img = _gen_grade_pie(df, f"{region_name}_grade.png")
+    except Exception:
+        pass
     if grade_img:
         doc.add_picture(grade_img, width=Inches(4.5))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -255,7 +263,11 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             _add_table(doc, headers, rows)
             doc.add_paragraph()
 
-        path_img = _gen_path_bar(df, f"{region_name}_path.png")
+        path_img = None
+        try:
+            path_img = _gen_path_bar(df, f"{region_name}_path.png")
+        except Exception:
+            pass
         if path_img:
             doc.add_picture(path_img, width=Inches(5.5))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -275,7 +287,11 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             _add_table(doc, headers, rows)
             doc.add_paragraph()
 
-            stack_img = _gen_path_grade_stack(df, f"{region_name}_path_grade.png")
+            stack_img = None
+            try:
+                stack_img = _gen_path_grade_stack(df, f"{region_name}_path_grade.png")
+            except Exception:
+                pass
             if stack_img:
                 doc.add_picture(stack_img, width=Inches(5.5))
                 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -286,7 +302,7 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
     score_cols = ["外贸基础能力", "电商运营能力", "合作配合意愿", "产能承接配套"]
     available_dims = [c for c in score_cols if c in df.columns]
     if path_col in df.columns and available_dims:
-        avg_df = df.groupby(path_col)[available_dims].mean().dropna(how="all")
+        avg_df = df.groupby(path_col)[available_dims].mean(numeric_only=True).dropna(how="all")
         if not avg_df.empty:
             headers = ["路径"] + list(avg_df.columns)
             rows = []
@@ -295,7 +311,11 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             _add_table(doc, headers, rows)
             doc.add_paragraph()
 
-            score_by_path_img = _gen_score_by_path(df, f"{region_name}_score_by_path.png")
+            score_by_path_img = None
+            try:
+                score_by_path_img = _gen_score_by_path(df, f"{region_name}_score_by_path.png")
+            except Exception:
+                pass
             if score_by_path_img:
                 doc.add_picture(score_by_path_img, width=Inches(5.5))
                 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -316,7 +336,11 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
             _add_table(doc, headers, rows)
             doc.add_paragraph()
 
-        box_img = _gen_score_box(df, f"{region_name}_score.png")
+        box_img = None
+        try:
+            box_img = _gen_score_box(df, f"{region_name}_score.png")
+        except Exception:
+            pass
         if box_img:
             doc.add_picture(box_img, width=Inches(5.5))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
