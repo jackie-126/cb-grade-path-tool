@@ -101,11 +101,15 @@ def _gen_score_box(df, fname="score_box.png"):
     available = [c for c in score_cols if c in df.columns]
     if not available:
         return None
+    data = [(c, df[c].dropna().values) for c in available]
+    data = [(c, d) for c, d in data if len(d) > 0]
+    if not data:
+        return None
+    labels, values = zip(*data)
     _setup_chinese_font()
     fig, ax = plt.subplots(figsize=(8, 4))
-    data = [df[c].dropna().values for c in available]
-    bp = ax.boxplot(data, labels=available, patch_artist=True)
-    for patch, color in zip(bp["boxes"], ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(available)]):
+    bp = ax.boxplot(values, labels=labels, patch_artist=True)
+    for patch, color in zip(bp["boxes"], ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(labels)]):
         patch.set_facecolor(color)
         patch.set_alpha(0.6)
     ax.set_ylabel("得分")
@@ -142,9 +146,13 @@ def _gen_score_by_path(df, fname="score_by_path.png"):
     available = [c for c in score_cols if c in df.columns]
     if path_col not in df.columns or not available:
         return None
-    grouped = df.groupby(path_col)[available].mean()
+    grouped = df.groupby(path_col)[available].mean().dropna(how="all")
     if grouped.empty:
         return None
+    grouped = grouped.dropna(axis=1, how="all")
+    if grouped.empty or grouped.shape[1] == 0:
+        return None
+    available = list(grouped.columns)
     _setup_chinese_font()
     fig, ax = plt.subplots(figsize=(10, max(4, len(grouped) * 0.5)))
     grouped.plot(kind="barh", ax=ax, color=["#3498db", "#2ecc71", "#e74c3c", "#f39c12"][:len(available)], edgecolor="white", linewidth=0.5)
@@ -278,13 +286,12 @@ def generate_report(df, title="跨境电商企业分析报告", region_name="", 
     score_cols = ["外贸基础能力", "电商运营能力", "合作配合意愿", "产能承接配套"]
     available_dims = [c for c in score_cols if c in df.columns]
     if path_col in df.columns and available_dims:
-        grouped = df.groupby(path_col)[available_dims + ["总分"]].agg(["mean", "count"]) if "总分" in df.columns else df.groupby(path_col)[available_dims].agg(["mean", "count"])
-        avg_df = df.groupby(path_col)[available_dims].mean()
+        avg_df = df.groupby(path_col)[available_dims].mean().dropna(how="all")
         if not avg_df.empty:
-            headers = ["路径"] + available_dims
+            headers = ["路径"] + list(avg_df.columns)
             rows = []
             for path_name, row in avg_df.iterrows():
-                rows.append([str(path_name)] + [f"{v:.1f}" for v in row.values])
+                rows.append([str(path_name)] + [f"{v:.1f}" if pd.notna(v) else "" for v in row.values])
             _add_table(doc, headers, rows)
             doc.add_paragraph()
 
