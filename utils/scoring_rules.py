@@ -59,22 +59,22 @@ GRADE_THRESHOLDS = [
 ]
 
 FIELD_MAPPING = {
-    "has_export_experience": {"keywords": ["外贸出口经验", "出口经验", "是否有外贸"], "type": "bool"},
+    "has_export_experience": {"keywords": ["是否有外贸出口经验"], "type": "bool"},
     "is_specialized_enterprise": {"keywords": ["专精特新"], "type": "bool"},
     "is_industry_representative": {"keywords": ["产业带代表"], "type": "bool"},
     "has_innovative_product": {"keywords": ["创新产品"], "type": "bool"},
-    "has_exhibition_experience": {"keywords": ["广交会", "国际展会", "参展"], "type": "bool"},
-    "export_amount": {"keywords": ["出口额", "上年度出口"], "type": "export_amount"},
-    "has_ecommerce_experience": {"keywords": ["电商供货经验", "电商经验"], "type": "bool"},
-    "has_ecommerce_team": {"keywords": ["专属电商团队", "电商团队"], "type": "bool"},
-    "ecommerce_platform_count": {"keywords": ["电商平台", "店铺数量", "平台数量"], "type": "platform_count"},
-    "willing_showroom": {"keywords": ["展厅展示", "免费入驻", "展厅"], "type": "bool"},
-    "willing_small_batch": {"keywords": ["小批量", "多品种订单"], "type": "bool"},
-    "willing_training_count": {"keywords": ["培训", "参加培训"], "type": "training_count"},
-    "willing_product_materials": {"keywords": ["产品素材", "高清素材", "参数", "包装信息"], "type": "bool"},
-    "liaison_count": {"keywords": ["专人对接", "对接合作", "专人"], "type": "liaison_count"},
-    "capacity_reservation_ratio": {"keywords": ["产能预留", "预留比例", "产能比例"], "type": "capacity_ratio"},
-    "ecommerce_sales_amount": {"keywords": ["电商销售额", "电商总销售额", "电商销售"], "type": "ecommerce_sales"},
+    "has_exhibition_experience": {"keywords": ["广交会", "国际展会"], "type": "bool"},
+    "export_amount": {"keywords": ["出口额"], "type": "export_amount"},
+    "has_ecommerce_experience": {"keywords": ["电商供货经验"], "type": "bool"},
+    "has_ecommerce_team": {"keywords": ["有电商团队"], "type": "bool"},
+    "ecommerce_platform_count": {"keywords": ["电商平台数量", "店铺数量"], "type": "platform_count"},
+    "willing_showroom": {"keywords": ["展厅展示"], "type": "bool"},
+    "willing_small_batch": {"keywords": ["小批量"], "type": "bool"},
+    "willing_training_count": {"keywords": ["培训人数"], "type": "training_count"},
+    "willing_product_materials": {"keywords": ["高清图片"], "type": "bool"},
+    "liaison_count": {"keywords": ["合作事宜"], "type": "liaison_count"},
+    "capacity_reservation_ratio": {"keywords": ["新渠道"], "type": "capacity_ratio"},
+    "ecommerce_sales_amount": {"keywords": ["电商总销售额"], "type": "ecommerce_sales"},
 }
 
 
