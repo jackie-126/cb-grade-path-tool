@@ -18,11 +18,11 @@ FIELD_LABELS = {
     "has_export_experience": "外贸出口经验", "is_specialized_enterprise": "专精特新",
     "is_industry_representative": "产业带代表性", "has_innovative_product": "创新产品",
     "has_exhibition_experience": "展会参展", "export_amount": "上年度出口额",
-    "has_ecommerce_experience": "电商供货经验", "has_ecommerce_team": "专属电商团队",
+    "has_ecommerce_experience": "电商供货经验", "has_ecommerce_team": "电商团队",
     "ecommerce_platform_count": "平台店铺数量", "willing_showroom": "展厅展示",
     "willing_small_batch": "小批量订单", "willing_training_count": "培训人数",
-    "willing_product_materials": "产品素材参数", "liaison_count": "对接人数",
-    "capacity_reservation_ratio": "产能预留比例", "ecommerce_sales_amount": "电商销售额",
+    "willing_product_materials": "高清图片素材", "liaison_count": "合作事宜对接",
+    "capacity_reservation_ratio": "产能预留新渠道", "ecommerce_sales_amount": "电商总销售额",
 }
 
 
@@ -94,10 +94,6 @@ def _validate_field(series, field_type):
 
 def check_required_fields(mapping, mode="score"):
     missing = []
-    if mode in ("score", "both"):
-        for field in REQUIRED_SCORING_FIELDS:
-            if field not in mapping:
-                missing.append(FIELD_LABELS.get(field, field))
     if mode in ("path", "both"):
         path_required = ["direction_intent", "customer_profile"]
         path_labels = {"direction_intent": "方向意图", "customer_profile": "客户画像"}
@@ -166,13 +162,22 @@ def get_detection_summary_questionnaire(df, mapping, extra_cols):
     if missing:
         summary.append(f"\n  ✗ 缺少必填字段({len(missing)}): {missing}")
 
+    missing_scoring = [f for f in REQUIRED_SCORING_FIELDS if f not in mapping]
+    if missing_scoring:
+        labels = [FIELD_LABELS.get(f, f) for f in missing_scoring]
+        summary.append(f"\n  ℹ 未识别到的评分字段({len(missing_scoring)}): {labels}")
+        summary.append(f"     缺失字段不影响评分，有对应列则自动加分")
+
     if extra_cols:
         summary.append(f"  未匹配列({len(extra_cols)}): {extra_cols[:5]}{'...' if len(extra_cols) > 5 else ''}")
 
     return "\n".join(summary)
 
 
-STAGE1_MARKER_KEYWORDS = ["外贸出口经验", "专精特新", "产业带代表", "创新产品", "广交会", "电商供货经验", "展厅展示", "小批量"]
+STAGE1_MARKER_KEYWORDS = [
+    "外贸出口经验", "专精特新", "产业带代表", "创新产品", "广交会",
+    "有电商团队", "展厅展示", "小批量"
+]
 STAGE2_MARKER_KEYWORDS = ["方向意图", "客户画像", "SKU", "MOQ", "起订量", "主营产品所属大类"]
 
 

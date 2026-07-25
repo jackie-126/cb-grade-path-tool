@@ -6,12 +6,12 @@ from utils.normalize import normalize, normalize_sku, normalize_moq
 PATH_DIRECTION_FIELDS = {
     "direction_intent": {"keywords": ["方向意图", "想要做跨境电商", "出海方向", "跨境方向"], "type": "direction"},
     "customer_profile": {"keywords": ["客户画像", "客户类型", "目标客户"], "type": "customer"},
-    "product_category": {"keywords": ["主营产品", "产品大类", "产品类别", "产品类型"], "type": "product"},
+    "product_category": {"keywords": ["主营产品所属大类", "产品类别", "产品类型"], "type": "product"},
     "sku_count": {"keywords": ["SKU", "sku", "典型SKU"], "type": "sku"},
     "moq": {"keywords": ["MOQ", "moq", "起订量", "最小起订"], "type": "moq"},
     "has_rd_team": {"keywords": ["研发", "设计团队", "独立研发"], "type": "bool"},
     "has_product_images": {"keywords": ["高清产品图", "产品图", "高清图", "参数表"], "type": "bool"},
-    "is_core_supplier": {"keywords": ["核心供应商", "稳定供货", "长期供货", "供货承接"], "type": "bool"},
+    "is_core_supplier": {"keywords": ["稳定供货承接意愿", "核心供应商"], "type": "bool"},
 }
 
 PATH_FIELD_LABELS = {
